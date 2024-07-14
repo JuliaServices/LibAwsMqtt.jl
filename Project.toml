@@ -15,7 +15,7 @@ aws_c_mqtt_jll = "35636aaa-5d3a-56eb-bfb5-a154ce8a9530"
 [compat]
 Aqua = "0.7"
 CEnum = "0.5"
-LibAwsCal = "=1.0.0"
+LibAwsCal = "=1.0.0, 1"
 LibAwsCommon = "=1.0.0"
 LibAwsCompression = "=1.0.0"
 LibAwsHTTP = "=1.0.0"

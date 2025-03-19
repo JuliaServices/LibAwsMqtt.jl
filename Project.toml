@@ -1,6 +1,6 @@
 name = "LibAwsMqtt"
 uuid = "dbf63f58-971e-4a9b-b153-820e5f7f543b"
-version = "1.1.0"
+version = "1.1.1"
 
 [deps]
 CEnum = "fa961155-64e5-5f13-b03f-caf6b980ea82"
@@ -21,7 +21,7 @@ LibAwsCompression = "1.1.0"
 LibAwsHTTP = "1.1.0"
 LibAwsIO = "1.1.0"
 LibAwsSdkutils = "1.1.0"
-aws_c_mqtt_jll = "=0.10.4"
+aws_c_mqtt_jll = "=0.12.2"
 julia = "1.6"
 
 [extras]

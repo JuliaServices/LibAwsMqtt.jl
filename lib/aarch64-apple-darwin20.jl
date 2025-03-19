@@ -780,6 +780,17 @@ Documentation not found.
     AWS_ERROR_MQTT_CONNECTION_RESUBSCRIBE_NO_TOPICS = 5163
     AWS_ERROR_MQTT_CONNECTION_SUBSCRIBE_FAILURE = 5164
     AWS_ERROR_MQTT_ACK_REASON_CODE_FAILURE = 5165
+    AWS_ERROR_MQTT_PROTOCOL_ADAPTER_FAILING_REASON_CODE = 5166
+    AWS_ERROR_MQTT_REQUEST_RESPONSE_CLIENT_SHUT_DOWN = 5167
+    AWS_ERROR_MQTT_REQUEST_RESPONSE_TIMEOUT = 5168
+    AWS_ERROR_MQTT_REQUEST_RESPONSE_NO_SUBSCRIPTION_CAPACITY = 5169
+    AWS_ERROR_MQTT_REQUEST_RESPONSE_SUBSCRIBE_FAILURE = 5170
+    AWS_ERROR_MQTT_REQUEST_RESPONSE_INTERNAL_ERROR = 5171
+    AWS_ERROR_MQTT_REQUEST_RESPONSE_PUBLISH_FAILURE = 5172
+    AWS_ERROR_MQTT_REUQEST_RESPONSE_STREAM_ALREADY_ACTIVATED = 5173
+    AWS_ERROR_MQTT_REQUEST_RESPONSE_MODELED_SERVICE_ERROR = 5174
+    AWS_ERROR_MQTT_REQUEST_RESPONSE_PAYLOAD_PARSE_ERROR = 5175
+    AWS_ERROR_MQTT_REQUEST_RESPONSE_INVALID_RESPONSE_PATH = 5176
     AWS_ERROR_END_MQTT_RANGE = 6143
 end
 
@@ -796,6 +807,7 @@ Documentation not found.
     AWS_LS_MQTT5_CLIENT = 5124
     AWS_LS_MQTT5_CANARY = 5125
     AWS_LS_MQTT5_TO_MQTT3_ADAPTER = 5126
+    AWS_LS_MQTT_REQUEST_RESPONSE = 5127
 end
 
 """
@@ -913,6 +925,247 @@ int aws_mqtt_client_get_topic_for_outstanding_publish_packet( struct aws_mqtt_cl
 """
 function aws_mqtt_client_get_topic_for_outstanding_publish_packet(connection, packet_id, allocator, result)
     ccall((:aws_mqtt_client_get_topic_for_outstanding_publish_packet, libaws_c_mqtt), Cint, (Ptr{aws_mqtt_client_connection}, UInt16, Ptr{aws_allocator}, Ptr{Ptr{aws_string}}), connection, packet_id, allocator, result)
+end
+
+"""
+Documentation not found.
+"""
+mutable struct aws_mqtt_request_response_client end
+
+"""
+    aws_mqtt_request_operation_response_path
+
+Documentation not found.
+"""
+struct aws_mqtt_request_operation_response_path
+    topic::aws_byte_cursor
+    correlation_token_json_path::aws_byte_cursor
+end
+
+# typedef void ( aws_mqtt_request_operation_completion_fn ) ( const struct aws_byte_cursor * response_topic , const struct aws_byte_cursor * payload , int error_code , void * user_data )
+"""
+Documentation not found.
+"""
+const aws_mqtt_request_operation_completion_fn = Cvoid
+
+"""
+    aws_mqtt_request_operation_options
+
+Documentation not found.
+"""
+struct aws_mqtt_request_operation_options
+    subscription_topic_filters::Ptr{aws_byte_cursor}
+    subscription_topic_filter_count::Csize_t
+    response_paths::Ptr{aws_mqtt_request_operation_response_path}
+    response_path_count::Csize_t
+    publish_topic::aws_byte_cursor
+    serialized_request::aws_byte_cursor
+    correlation_token::aws_byte_cursor
+    completion_callback::Ptr{aws_mqtt_request_operation_completion_fn}
+    user_data::Ptr{Cvoid}
+end
+
+"""
+    aws_rr_streaming_subscription_event_type
+
+Documentation not found.
+"""
+@cenum aws_rr_streaming_subscription_event_type::UInt32 begin
+    ARRSSET_SUBSCRIPTION_ESTABLISHED = 0
+    ARRSSET_SUBSCRIPTION_LOST = 1
+    ARRSSET_SUBSCRIPTION_HALTED = 2
+end
+
+# typedef void ( aws_mqtt_streaming_operation_subscription_status_fn ) ( enum aws_rr_streaming_subscription_event_type status , int error_code , void * user_data )
+"""
+Documentation not found.
+"""
+const aws_mqtt_streaming_operation_subscription_status_fn = Cvoid
+
+# typedef void ( aws_mqtt_streaming_operation_incoming_publish_fn ) ( struct aws_byte_cursor payload , struct aws_byte_cursor topic , void * user_data )
+"""
+Documentation not found.
+"""
+const aws_mqtt_streaming_operation_incoming_publish_fn = Cvoid
+
+# typedef void ( aws_mqtt_streaming_operation_terminated_fn ) ( void * user_data )
+"""
+Documentation not found.
+"""
+const aws_mqtt_streaming_operation_terminated_fn = Cvoid
+
+"""
+    aws_mqtt_streaming_operation_options
+
+Documentation not found.
+"""
+struct aws_mqtt_streaming_operation_options
+    topic_filter::aws_byte_cursor
+    subscription_status_callback::Ptr{aws_mqtt_streaming_operation_subscription_status_fn}
+    incoming_publish_callback::Ptr{aws_mqtt_streaming_operation_incoming_publish_fn}
+    terminated_callback::Ptr{aws_mqtt_streaming_operation_terminated_fn}
+    user_data::Ptr{Cvoid}
+end
+
+# typedef void ( aws_mqtt_request_response_client_initialized_callback_fn ) ( void * user_data )
+"""
+Documentation not found.
+"""
+const aws_mqtt_request_response_client_initialized_callback_fn = Cvoid
+
+# typedef void ( aws_mqtt_request_response_client_terminated_callback_fn ) ( void * user_data )
+"""
+Documentation not found.
+"""
+const aws_mqtt_request_response_client_terminated_callback_fn = Cvoid
+
+"""
+    aws_mqtt_request_response_client_options
+
+Documentation not found.
+"""
+struct aws_mqtt_request_response_client_options
+    max_request_response_subscriptions::Csize_t
+    max_streaming_subscriptions::Csize_t
+    operation_timeout_seconds::UInt32
+    initialized_callback::Ptr{aws_mqtt_request_response_client_initialized_callback_fn}
+    terminated_callback::Ptr{aws_mqtt_request_response_client_terminated_callback_fn}
+    user_data::Ptr{Cvoid}
+end
+
+"""
+    aws_mqtt_request_response_client_new_from_mqtt311_client(allocator, client, options)
+
+Documentation not found.
+### Prototype
+```c
+struct aws_mqtt_request_response_client *aws_mqtt_request_response_client_new_from_mqtt311_client( struct aws_allocator *allocator, struct aws_mqtt_client_connection *client, const struct aws_mqtt_request_response_client_options *options);
+```
+"""
+function aws_mqtt_request_response_client_new_from_mqtt311_client(allocator, client, options)
+    ccall((:aws_mqtt_request_response_client_new_from_mqtt311_client, libaws_c_mqtt), Ptr{aws_mqtt_request_response_client}, (Ptr{aws_allocator}, Ptr{aws_mqtt_client_connection}, Ptr{aws_mqtt_request_response_client_options}), allocator, client, options)
+end
+
+"""
+    aws_mqtt_request_response_client_new_from_mqtt5_client(allocator, client, options)
+
+Documentation not found.
+### Prototype
+```c
+struct aws_mqtt_request_response_client *aws_mqtt_request_response_client_new_from_mqtt5_client( struct aws_allocator *allocator, struct aws_mqtt5_client *client, const struct aws_mqtt_request_response_client_options *options);
+```
+"""
+function aws_mqtt_request_response_client_new_from_mqtt5_client(allocator, client, options)
+    ccall((:aws_mqtt_request_response_client_new_from_mqtt5_client, libaws_c_mqtt), Ptr{aws_mqtt_request_response_client}, (Ptr{aws_allocator}, Ptr{aws_mqtt5_client}, Ptr{aws_mqtt_request_response_client_options}), allocator, client, options)
+end
+
+"""
+    aws_mqtt_request_response_client_acquire(client)
+
+Documentation not found.
+### Prototype
+```c
+struct aws_mqtt_request_response_client *aws_mqtt_request_response_client_acquire( struct aws_mqtt_request_response_client *client);
+```
+"""
+function aws_mqtt_request_response_client_acquire(client)
+    ccall((:aws_mqtt_request_response_client_acquire, libaws_c_mqtt), Ptr{aws_mqtt_request_response_client}, (Ptr{aws_mqtt_request_response_client},), client)
+end
+
+"""
+    aws_mqtt_request_response_client_release(client)
+
+Documentation not found.
+### Prototype
+```c
+struct aws_mqtt_request_response_client *aws_mqtt_request_response_client_release( struct aws_mqtt_request_response_client *client);
+```
+"""
+function aws_mqtt_request_response_client_release(client)
+    ccall((:aws_mqtt_request_response_client_release, libaws_c_mqtt), Ptr{aws_mqtt_request_response_client}, (Ptr{aws_mqtt_request_response_client},), client)
+end
+
+"""
+    aws_mqtt_request_response_client_submit_request(client, request_options)
+
+Documentation not found.
+### Prototype
+```c
+int aws_mqtt_request_response_client_submit_request( struct aws_mqtt_request_response_client *client, const struct aws_mqtt_request_operation_options *request_options);
+```
+"""
+function aws_mqtt_request_response_client_submit_request(client, request_options)
+    ccall((:aws_mqtt_request_response_client_submit_request, libaws_c_mqtt), Cint, (Ptr{aws_mqtt_request_response_client}, Ptr{aws_mqtt_request_operation_options}), client, request_options)
+end
+
+"""
+Documentation not found.
+"""
+mutable struct aws_mqtt_rr_client_operation end
+
+"""
+    aws_mqtt_request_response_client_create_streaming_operation(client, streaming_options)
+
+Documentation not found.
+### Prototype
+```c
+struct aws_mqtt_rr_client_operation *aws_mqtt_request_response_client_create_streaming_operation( struct aws_mqtt_request_response_client *client, const struct aws_mqtt_streaming_operation_options *streaming_options);
+```
+"""
+function aws_mqtt_request_response_client_create_streaming_operation(client, streaming_options)
+    ccall((:aws_mqtt_request_response_client_create_streaming_operation, libaws_c_mqtt), Ptr{aws_mqtt_rr_client_operation}, (Ptr{aws_mqtt_request_response_client}, Ptr{aws_mqtt_streaming_operation_options}), client, streaming_options)
+end
+
+"""
+    aws_mqtt_request_response_client_get_event_loop(client)
+
+Documentation not found.
+### Prototype
+```c
+struct aws_event_loop *aws_mqtt_request_response_client_get_event_loop( struct aws_mqtt_request_response_client *client);
+```
+"""
+function aws_mqtt_request_response_client_get_event_loop(client)
+    ccall((:aws_mqtt_request_response_client_get_event_loop, libaws_c_mqtt), Ptr{aws_event_loop}, (Ptr{aws_mqtt_request_response_client},), client)
+end
+
+"""
+    aws_mqtt_rr_client_operation_activate(operation)
+
+Documentation not found.
+### Prototype
+```c
+int aws_mqtt_rr_client_operation_activate(struct aws_mqtt_rr_client_operation *operation);
+```
+"""
+function aws_mqtt_rr_client_operation_activate(operation)
+    ccall((:aws_mqtt_rr_client_operation_activate, libaws_c_mqtt), Cint, (Ptr{aws_mqtt_rr_client_operation},), operation)
+end
+
+"""
+    aws_mqtt_rr_client_operation_acquire(operation)
+
+Documentation not found.
+### Prototype
+```c
+struct aws_mqtt_rr_client_operation *aws_mqtt_rr_client_operation_acquire( struct aws_mqtt_rr_client_operation *operation);
+```
+"""
+function aws_mqtt_rr_client_operation_acquire(operation)
+    ccall((:aws_mqtt_rr_client_operation_acquire, libaws_c_mqtt), Ptr{aws_mqtt_rr_client_operation}, (Ptr{aws_mqtt_rr_client_operation},), operation)
+end
+
+"""
+    aws_mqtt_rr_client_operation_release(operation)
+
+Documentation not found.
+### Prototype
+```c
+struct aws_mqtt_rr_client_operation *aws_mqtt_rr_client_operation_release( struct aws_mqtt_rr_client_operation *operation);
+```
+"""
+function aws_mqtt_rr_client_operation_release(operation)
+    ccall((:aws_mqtt_rr_client_operation_release, libaws_c_mqtt), Ptr{aws_mqtt_rr_client_operation}, (Ptr{aws_mqtt_rr_client_operation},), operation)
 end
 
 """

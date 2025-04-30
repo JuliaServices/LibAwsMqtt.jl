@@ -942,7 +942,31 @@ struct aws_mqtt_request_operation_response_path
     correlation_token_json_path::aws_byte_cursor
 end
 
-# typedef void ( aws_mqtt_request_operation_completion_fn ) ( const struct aws_byte_cursor * response_topic , const struct aws_byte_cursor * payload , int error_code , void * user_data )
+"""
+    aws_mqtt5_user_property
+
+Non-persistent representation of an mqtt5 user property.
+"""
+struct aws_mqtt5_user_property
+    name::aws_byte_cursor
+    value::aws_byte_cursor
+end
+
+"""
+    aws_mqtt_rr_incoming_publish_event
+
+Documentation not found.
+"""
+struct aws_mqtt_rr_incoming_publish_event
+    payload::aws_byte_cursor
+    topic::aws_byte_cursor
+    content_type::Ptr{aws_byte_cursor}
+    user_property_count::Csize_t
+    user_properties::Ptr{aws_mqtt5_user_property}
+    message_expiry_interval_seconds::Ptr{UInt32}
+end
+
+# typedef void ( aws_mqtt_request_operation_completion_fn ) ( const struct aws_mqtt_rr_incoming_publish_event * publish_event , int error_code , void * user_data )
 """
 Documentation not found.
 """
@@ -982,7 +1006,7 @@ Documentation not found.
 """
 const aws_mqtt_streaming_operation_subscription_status_fn = Cvoid
 
-# typedef void ( aws_mqtt_streaming_operation_incoming_publish_fn ) ( struct aws_byte_cursor payload , struct aws_byte_cursor topic , void * user_data )
+# typedef void ( aws_mqtt_streaming_operation_incoming_publish_fn ) ( const struct aws_mqtt_rr_incoming_publish_event * publish_event , void * user_data )
 """
 Documentation not found.
 """
@@ -1443,16 +1467,6 @@ https://docs.oasis-open.org/mqtt/mqtt/v5.0/os/mqtt-v5.0-os.html#\\_Toc3901079
     AWS_MQTT5_CRC_USE_ANOTHER_SERVER = 156
     AWS_MQTT5_CRC_SERVER_MOVED = 157
     AWS_MQTT5_CRC_CONNECTION_RATE_EXCEEDED = 159
-end
-
-"""
-    aws_mqtt5_user_property
-
-Non-persistent representation of an mqtt5 user property.
-"""
-struct aws_mqtt5_user_property
-    name::aws_byte_cursor
-    value::aws_byte_cursor
 end
 
 """

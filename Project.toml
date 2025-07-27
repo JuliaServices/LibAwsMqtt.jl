@@ -1,6 +1,6 @@
 name = "LibAwsMqtt"
 uuid = "dbf63f58-971e-4a9b-b153-820e5f7f543b"
-version = "1.1.4"
+version = "1.1.5"
 
 [deps]
 CEnum = "fa961155-64e5-5f13-b03f-caf6b980ea82"
@@ -13,7 +13,7 @@ LibAwsSdkutils = "c5f27dc9-c37b-4573-9b6c-b90055172160"
 aws_c_mqtt_jll = "35636aaa-5d3a-56eb-bfb5-a154ce8a9530"
 
 [compat]
-Aqua = "0.7"
+Aqua = "0.7,0.8"
 CEnum = "0.5"
 LibAwsCal = "1.1.0"
 LibAwsCommon = "1.2.0"
@@ -21,8 +21,9 @@ LibAwsCompression = "1.1.0"
 LibAwsHTTP = "1.1.0"
 LibAwsIO = "1.1.0"
 LibAwsSdkutils = "1.1.0"
-aws_c_mqtt_jll = "=0.13.1"
+aws_c_mqtt_jll = "=0.13.3"
 julia = "1.6"
+Test = "1.9"
 
 [extras]
 Aqua = "4c88cf16-eb10-579e-8560-4a9242c79595"

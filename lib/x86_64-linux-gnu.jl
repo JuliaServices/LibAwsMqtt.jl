@@ -1,4 +1,4 @@
-using CEnum
+using CEnum: CEnum, @cenum
 
 """
 Empty struct that is passed when on\\_connection\\_closed is called. Currently holds nothing but will allow expanding in the future should it be needed.
@@ -715,6 +715,36 @@ function aws_mqtt_client_connection_get_stats(connection, stats)
 end
 
 """
+    aws_mqtt_iot_metrics
+
+IoT SDK metrics configuration structure
+"""
+struct aws_mqtt_iot_metrics
+    library_name::aws_byte_cursor
+end
+
+"""
+    aws_mqtt_client_connection_set_metrics(connection, metrics)
+
+Sets IoT SDK metrics configuration for the connection. These metrics will be appended to the username field during connection.
+
+NOTE: DO NOT USE METADATA. Metadata will not be set.
+
+# Arguments
+* `connection`: The connection object
+* `metrics`: The IoT SDK metrics configuration (pass NULL to disable metrics)
+# Returns
+AWS\\_OP\\_SUCCESS if successful, AWS\\_OP\\_ERR otherwise
+### Prototype
+```c
+int aws_mqtt_client_connection_set_metrics( struct aws_mqtt_client_connection *connection, const struct aws_mqtt_iot_metrics *metrics);
+```
+"""
+function aws_mqtt_client_connection_set_metrics(connection, metrics)
+    ccall((:aws_mqtt_client_connection_set_metrics, libaws_c_mqtt), Cint, (Ptr{aws_mqtt_client_connection}, Ptr{aws_mqtt_iot_metrics}), connection, metrics)
+end
+
+"""
     aws_mqtt_connect_return_code
 
 Documentation not found.
@@ -808,6 +838,16 @@ Documentation not found.
     AWS_LS_MQTT5_CANARY = 5125
     AWS_LS_MQTT5_TO_MQTT3_ADAPTER = 5126
     AWS_LS_MQTT_REQUEST_RESPONSE = 5127
+end
+
+"""
+    aws_mqtt_metadata_entry
+
+Metadata entry for IoT SDK metrics
+"""
+struct aws_mqtt_metadata_entry
+    key::aws_byte_cursor
+    value::aws_byte_cursor
 end
 
 """
@@ -1312,6 +1352,16 @@ Signature of callback to invoke on Publish success/failure.
 """
 const aws_mqtt5_publish_completion_fn = Cvoid
 
+# typedef void ( aws_mqtt5_manual_publish_acknowledgement_completion_fn ) ( enum aws_mqtt5_manual_publish_acknowledgement_result publish_acknowledgement_result , void * completion_user_data )
+"""
+Signature of callback invoked when a manual publish acknowledgement operation completes.
+
+# Arguments
+* `puback_result`: result of the publish acknowledgement operation
+* `completion_user_data`: user data passed in with the completion options
+"""
+const aws_mqtt5_manual_publish_acknowledgement_completion_fn = Cvoid
+
 # typedef void ( aws_mqtt5_subscribe_completion_fn ) ( const struct aws_mqtt5_packet_suback_view * suback , int error_code , void * complete_ctx )
 """
 Signature of callback to invoke on Subscribe success/failure.
@@ -1357,6 +1407,16 @@ struct aws_mqtt5_publish_completion_options
     completion_callback::Ptr{aws_mqtt5_publish_completion_fn}
     completion_user_data::Ptr{Cvoid}
     ack_timeout_seconds_override::UInt32
+end
+
+"""
+    aws_mqtt5_manual_publish_acknowledgement_completion_options
+
+Completion options for the manual publish acknowledgement operation
+"""
+struct aws_mqtt5_manual_publish_acknowledgement_completion_options
+    completion_callback::Ptr{aws_mqtt5_manual_publish_acknowledgement_completion_fn}
+    completion_user_data::Ptr{Cvoid}
 end
 
 """
@@ -1676,6 +1736,7 @@ struct aws_mqtt5_client_options
     client_termination_handler::Ptr{aws_mqtt5_client_termination_completion_fn}
     client_termination_handler_user_data::Ptr{Cvoid}
     host_resolution_override::Ptr{aws_host_resolution_config}
+    metrics::Ptr{aws_mqtt_iot_metrics}
 end
 
 """
@@ -1788,6 +1849,46 @@ int aws_mqtt5_client_publish( struct aws_mqtt5_client *client, const struct aws_
 """
 function aws_mqtt5_client_publish(client, publish_options, completion_options)
     ccall((:aws_mqtt5_client_publish, libaws_c_mqtt), Cint, (Ptr{aws_mqtt5_client}, Ptr{aws_mqtt5_packet_publish_view}, Ptr{aws_mqtt5_publish_completion_options}), client, publish_options, completion_options)
+end
+
+"""
+    aws_mqtt5_client_acquire_publish_acknowledgement(client, publish_view)
+
+Takes manual control of publish acknowledgement for the given PUBLISH packet.
+
+This MUST only be called from within the publish received callback. A return value of 0 indicates an invalid control id.
+
+# Arguments
+* `client`: mqtt5 client that received the PUBLISH packet to take manual publish acknowledgement control from.
+* `publish_view`: the view of the PUBLISH packet that publish acknowledgement control is taken from.
+# Returns
+pub\\_ack\\_control\\_id of the PUBLISH packet. This can be used to schedule a publish acknowledgement for the PUBLISH packet when used with the [`aws_mqtt5_client_invoke_publish_acknowledgement`](@ref) function call.
+### Prototype
+```c
+uint64_t aws_mqtt5_client_acquire_publish_acknowledgement( struct aws_mqtt5_client *client, const struct aws_mqtt5_packet_publish_view *publish_view);
+```
+"""
+function aws_mqtt5_client_acquire_publish_acknowledgement(client, publish_view)
+    ccall((:aws_mqtt5_client_acquire_publish_acknowledgement, libaws_c_mqtt), UInt64, (Ptr{aws_mqtt5_client}, Ptr{aws_mqtt5_packet_publish_view}), client, publish_view)
+end
+
+"""
+    aws_mqtt5_client_invoke_publish_acknowledgement(client, pub_ack_control_id, completion_options)
+
+Send publish acknowledgement for provided control id. Callback in completion\\_options will be invoked with an [`aws_mqtt5_manual_publish_acknowledgement_result`](@ref) once a publish acknowledgement operation has been completed.
+
+# Arguments
+* `client`: mqtt5 client to queue a puback for
+* `pub_ack_control_id`: Control ID of [`aws_mqtt5_manual_pub_ack_entry`](@ref) to send to broker/server
+# Returns
+success/failure of starting the manual publish acknowledgement operation.
+### Prototype
+```c
+int aws_mqtt5_client_invoke_publish_acknowledgement( struct aws_mqtt5_client *client, uint64_t pub_ack_control_id, const struct aws_mqtt5_manual_publish_acknowledgement_completion_options *completion_options);
+```
+"""
+function aws_mqtt5_client_invoke_publish_acknowledgement(client, pub_ack_control_id, completion_options)
+    ccall((:aws_mqtt5_client_invoke_publish_acknowledgement, libaws_c_mqtt), Cint, (Ptr{aws_mqtt5_client}, UInt64, Ptr{aws_mqtt5_manual_publish_acknowledgement_completion_options}), client, pub_ack_control_id, completion_options)
 end
 
 """
@@ -2048,6 +2149,11 @@ struct aws_mqtt5_listener *aws_mqtt5_listener_release(struct aws_mqtt5_listener 
 function aws_mqtt5_listener_release(listener)
     ccall((:aws_mqtt5_listener_release, libaws_c_mqtt), Ptr{aws_mqtt5_listener}, (Ptr{aws_mqtt5_listener},), listener)
 end
+
+"""
+Documentation not found.
+"""
+mutable struct aws_mqtt5_client_options_storage end
 
 """
     aws_mqtt5_user_property_set
@@ -2352,16 +2458,16 @@ function aws_mqtt5_user_property_set_size(property_set)
 end
 
 """
-    aws_mqtt5_packet_connect_storage_init(connect_storage, allocator, connect_options)
+    aws_mqtt5_packet_connect_storage_init(connect_storage, allocator, connect_options, options_storage)
 
 Documentation not found.
 ### Prototype
 ```c
-int aws_mqtt5_packet_connect_storage_init( struct aws_mqtt5_packet_connect_storage *connect_storage, struct aws_allocator *allocator, const struct aws_mqtt5_packet_connect_view *connect_options);
+int aws_mqtt5_packet_connect_storage_init( struct aws_mqtt5_packet_connect_storage *connect_storage, struct aws_allocator *allocator, const struct aws_mqtt5_packet_connect_view *connect_options, const struct aws_mqtt5_client_options_storage *options_storage);
 ```
 """
-function aws_mqtt5_packet_connect_storage_init(connect_storage, allocator, connect_options)
-    ccall((:aws_mqtt5_packet_connect_storage_init, libaws_c_mqtt), Cint, (Ptr{aws_mqtt5_packet_connect_storage}, Ptr{aws_allocator}, Ptr{aws_mqtt5_packet_connect_view}), connect_storage, allocator, connect_options)
+function aws_mqtt5_packet_connect_storage_init(connect_storage, allocator, connect_options, options_storage)
+    ccall((:aws_mqtt5_packet_connect_storage_init, libaws_c_mqtt), Cint, (Ptr{aws_mqtt5_packet_connect_storage}, Ptr{aws_allocator}, Ptr{aws_mqtt5_packet_connect_view}, Ptr{aws_mqtt5_client_options_storage}), connect_storage, allocator, connect_options, options_storage)
 end
 
 """
@@ -2703,6 +2809,18 @@ function aws_mqtt5_packet_unsuback_storage_clean_up(unsuback_storage)
 end
 
 """
+    aws_mqtt5_manual_publish_acknowledgement_result
+
+Result for manual PUBACK operations.
+"""
+@cenum aws_mqtt5_manual_publish_acknowledgement_result::UInt32 begin
+    AWS_MQTT5_MPAR_SUCCESS = 0
+    AWS_MQTT5_MPAR_PUBACK_CANCELLED = 1
+    AWS_MQTT5_MPAR_PUBACK_INVALID = 2
+    AWS_MQTT5_MPAR_CRT_FAILURE = 3
+end
+
+"""
     aws_mqtt5_packet_type
 
 Type of mqtt packet. Enum values match mqtt spec encoding values.
@@ -2727,6 +2845,18 @@ https://docs.oasis-open.org/mqtt/mqtt/v5.0/os/mqtt-v5.0-os.html#\\_Toc3901022
     AWS_MQTT5_PT_PINGRESP = 13
     AWS_MQTT5_PT_DISCONNECT = 14
     AWS_MQTT5_PT_AUTH = 15
+end
+
+"""
+    aws_mqtt5_manual_pub_ack_entry
+
+This is used to track which PUBLISH packets a user has taken manual publish acknowledgement control from.
+"""
+struct aws_mqtt5_manual_pub_ack_entry
+    allocator::Ptr{aws_allocator}
+    ref_count::aws_ref_count
+    pub_ack_control_id::UInt64
+    packet_id::UInt16
 end
 
 """

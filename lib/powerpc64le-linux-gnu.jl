@@ -715,20 +715,30 @@ function aws_mqtt_client_connection_get_stats(connection, stats)
 end
 
 """
+    aws_mqtt_metadata_entry
+
+Metadata entry for IoT SDK metrics
+"""
+struct aws_mqtt_metadata_entry
+    key::aws_byte_cursor
+    value::aws_byte_cursor
+end
+
+"""
     aws_mqtt_iot_metrics
 
 IoT SDK metrics configuration structure
 """
 struct aws_mqtt_iot_metrics
     library_name::aws_byte_cursor
+    metadata_count::Csize_t
+    metadata_entries::Ptr{aws_mqtt_metadata_entry}
 end
 
 """
     aws_mqtt_client_connection_set_metrics(connection, metrics)
 
 Sets IoT SDK metrics configuration for the connection. These metrics will be appended to the username field during connection.
-
-NOTE: DO NOT USE METADATA. Metadata will not be set.
 
 # Arguments
 * `connection`: The connection object
@@ -838,16 +848,6 @@ Documentation not found.
     AWS_LS_MQTT5_CANARY = 5125
     AWS_LS_MQTT5_TO_MQTT3_ADAPTER = 5126
     AWS_LS_MQTT_REQUEST_RESPONSE = 5127
-end
-
-"""
-    aws_mqtt_metadata_entry
-
-Metadata entry for IoT SDK metrics
-"""
-struct aws_mqtt_metadata_entry
-    key::aws_byte_cursor
-    value::aws_byte_cursor
 end
 
 """

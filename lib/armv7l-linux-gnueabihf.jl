@@ -396,6 +396,20 @@ function aws_mqtt_client_connection_set_http_proxy_options(connection, proxy_opt
 end
 
 """
+    aws_mqtt_client_connection_set_l4_proxy_options(connection, l4_proxy_config)
+
+Set l4 proxy options for the connection.
+
+### Prototype
+```c
+int aws_mqtt_client_connection_set_l4_proxy_options( struct aws_mqtt_client_connection *connection, struct aws_l4_proxy_config *l4_proxy_config);
+```
+"""
+function aws_mqtt_client_connection_set_l4_proxy_options(connection, l4_proxy_config)
+    ccall((:aws_mqtt_client_connection_set_l4_proxy_options, libaws_c_mqtt), Cint, (Ptr{aws_mqtt_client_connection}, Ptr{aws_l4_proxy_config}), connection, l4_proxy_config)
+end
+
+"""
     aws_mqtt_client_connection_set_host_resolution_options(connection, host_resolution_config)
 
 Set host resolution ooptions for the connection.
@@ -1737,6 +1751,7 @@ struct aws_mqtt5_client_options
     client_termination_handler_user_data::Ptr{Cvoid}
     host_resolution_override::Ptr{aws_host_resolution_config}
     metrics::Ptr{aws_mqtt_iot_metrics}
+    l4_proxy_config::Ptr{aws_l4_proxy_config}
 end
 
 """
